@@ -72,8 +72,8 @@ $loginUrl = $client->createAuthUrl();
         }
 
         .login-brand img {
-            width: 190px;
-            margin-bottom: 24px;
+            width: 290px;
+            margin-bottom: 10px;
         }
 
         .login-brand h1 {
@@ -150,11 +150,6 @@ $loginUrl = $client->createAuthUrl();
             .login-brand {
                 border-right: none;
                 padding: 10px 14px 12px;
-            }
-
-            .login-brand h1,
-            .login-brand p {
-                display: none;
             }
 
             .login-form {
