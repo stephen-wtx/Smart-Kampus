@@ -64,6 +64,14 @@ $salas = [
         button { margin-top:15px; padding:10px 20px; }
     </style>
 </head>
+
+<?php if (!empty($_SESSION['erro'])): ?>
+    <div style="background:#ffe6e6; border:1px solid #f00; padding:12px; margin-bottom:20px; color:#900;">
+        <?= htmlspecialchars($_SESSION['erro']); ?>
+    </div>
+    <?php unset($_SESSION['erro']); ?>
+<?php endif; ?>
+
 <body>
 
 <nav>

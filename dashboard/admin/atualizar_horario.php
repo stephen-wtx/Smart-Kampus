@@ -4,19 +4,14 @@ error_reporting(E_ALL);
 
 session_start();
 require_once __DIR__ . "/../../config/database.php";
-
-// (proteção de role pode ser ativada depois)
-// if (!isset($_SESSION['user']) || $_SESSION['user']['role'] !== 'admin') {
-//     http_response_code(403);
-//     exit('Acesso negado');
-// }
+require_once __DIR__ . "/validar_horario.php"; // função centralizada de validação
 
 // Validação mínima
 if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['id'])) {
     die("Requisição inválida.");
 }
 
-// Captura dos dados
+// Captura dados
 $id           = (int) $_POST['id'];
 $dia_semana   = $_POST['dia_semana'];
 $curso        = $_POST['curso'];
@@ -28,18 +23,39 @@ $sala         = $_POST['sala'];
 $hora_inicio  = $_POST['hora_inicio'];
 $hora_fim     = $_POST['hora_fim'];
 
-// UPDATE no banco
+// 1️⃣ Validação: horário início < fim e conflito de sala
+
+$erro = validarHorario(
+    $conn,
+    $dia_semana,
+    $curso,
+    $ano,
+    $semestre,
+    $turno,
+    $sala,
+    $hora_inicio,
+    $hora_fim,
+    $id
+);
+
+if ($erro) {
+    $_SESSION['erro'] = $erro;
+    header("Location: editar_horario.php?id=$id");
+    exit;
+}
+
+// 2️⃣ Atualiza o horário no banco
 $stmt = $conn->prepare("
     UPDATE horarios SET
-        dia_semana   = ?,
-        curso        = ?,
-        ano          = ?,
-        semestre     = ?,
-        disciplina   = ?,
-        turno        = ?,
-        sala         = ?,
-        hora_inicio  = ?,
-        hora_fim     = ?
+        dia_semana  = ?,
+        curso       = ?,
+        ano         = ?,
+        semestre    = ?,
+        disciplina  = ?,
+        turno       = ?,
+        sala        = ?,
+        hora_inicio = ?,
+        hora_fim    = ?
     WHERE id = ?
 ");
 
@@ -59,9 +75,9 @@ $stmt->bind_param(
 
 $stmt->execute();
 
-// Mensagem flash
+// 3️⃣ Mensagem de sucesso
 $_SESSION['sucesso'] = "Horário atualizado com sucesso!";
-
-// Redireciona de volta à lista
 header("Location: listar_horarios.php");
 exit;
+?>
+
