@@ -14,6 +14,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['id'])) {
 // Captura dados
 $id           = (int) $_POST['id'];
 $dia_semana   = $_POST['dia_semana'];
+$data         = $_POST['data']; // nova coluna obrigatória
 $curso        = $_POST['curso'];
 $ano          = $_POST['ano'];
 $semestre     = $_POST['semestre'];
@@ -23,13 +24,19 @@ $sala         = $_POST['sala'];
 $hora_inicio  = $_POST['hora_inicio'];
 $hora_fim     = $_POST['hora_fim'];
 
-// 1️⃣ Validação: horário início < fim e conflito de sala
+// 0️⃣ Validação da data
+if (!DateTime::createFromFormat('Y-m-d', $data)) {
+    $_SESSION['erro'] = "Data inválida!";
+    header("Location: editar_teste.php?id=$id");
+    exit;
+}
 
+// 1️⃣ Validação: horário início < fim, turno, conflitos
 $erro = validarHorario(
     $conn,
-    'aula',        // tipo
-    $dia_semana,   // dia_semana
-    null,          // data
+    'teste',
+    $dia_semana,
+    $data,
     $curso,
     $ano,
     $semestre,
@@ -37,20 +44,25 @@ $erro = validarHorario(
     $sala,
     $hora_inicio,
     $hora_fim,
-    $id            
+    $id // Ignora o próprio registro
 );
-
 
 if ($erro) {
     $_SESSION['erro'] = $erro;
-    header("Location: editar_horario.php?id=$id");
+    header("Location: editar_teste.php?id=$id");
     exit;
 }
 
-// 2️⃣ Atualiza o horário no banco
+// 2️⃣ Cálculo da duração
+$hora_inicio_dt = new DateTime($hora_inicio);
+$hora_fim_dt    = new DateTime($hora_fim);
+$duracao        = intval(($hora_fim_dt->getTimestamp() - $hora_inicio_dt->getTimestamp()) / 60);
+
+// 3️⃣ Atualiza o teste no banco
 $stmt = $conn->prepare("
-    UPDATE horarios SET
+    UPDATE testes SET
         dia_semana  = ?,
+        data        = ?,
         curso       = ?,
         ano         = ?,
         semestre    = ?,
@@ -58,13 +70,15 @@ $stmt = $conn->prepare("
         turno       = ?,
         sala        = ?,
         hora_inicio = ?,
-        hora_fim    = ?
+        hora_fim    = ?,
+        duracao     = ?
     WHERE id = ?
 ");
 
 $stmt->bind_param(
-    "ssissssssi",
+    "sssssssssssi",
     $dia_semana,
+    $data,
     $curso,
     $ano,
     $semestre,
@@ -73,14 +87,14 @@ $stmt->bind_param(
     $sala,
     $hora_inicio,
     $hora_fim,
+    $duracao,
     $id
 );
 
 $stmt->execute();
 
-// 3️⃣ Mensagem de sucesso
-$_SESSION['sucesso'] = "Horário atualizado com sucesso!";
-header("Location: listar_horarios.php");
+// 4️⃣ Mensagem de sucesso
+$_SESSION['sucesso'] = "Teste atualizado com sucesso!";
+header("Location: listar_testes.php");
 exit;
 ?>
-

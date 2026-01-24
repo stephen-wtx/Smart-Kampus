@@ -116,7 +116,7 @@ $total = $resultado->num_rows;
 <body>
 
 <nav>
-    <a href="/smartkampus/dashboard/admin/index.php">Criar Horário</a>
+    <a href="/smartkampus/dashboard/admin/index.php">Ir para pagina inicial</a>
     <a href="/smartkampus/dashboard/dashboard.php">Dashboard Principal</a>
     <a href="/smartkampus/public/logout.php">Logout</a>
 </nav>
