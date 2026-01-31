@@ -5,11 +5,25 @@ require_once '../../config/database.php';
 
 // Seleciona todas as reservas
 $reservas = $conn->query("
-    SELECT id, docente_nome, sala, dia_semana, data, hora_inicio, hora_fim, finalidade, estado
+    SELECT 
+        id,
+        docente_nome,
+        curso,
+        disciplina,
+        turno,
+        sala,
+        dia_semana,
+        data,
+        hora_inicio,
+        hora_fim,
+        finalidade,
+        estado
     FROM reservas
     ORDER BY data DESC, hora_inicio DESC
 ") or die("Erro na query: " . $conn->error);
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="pt">
@@ -81,25 +95,32 @@ $reservas = $conn->query("
             <table>
                 <tr>
                     <th>Docente</th>
+                    <th>Curso</th>
                     <th>Sala</th>
+                    <th>Disciplina</th>
+                    <th>Turno</th>
                     <th>Dia</th>
                     <th>Data</th>
                     <th>Hora</th>
                     <th>Finalidade</th>
-                    <th>Status</th>
+                    <th>Ação</th>
                 </tr>
 
             <?php while ($r = $reservas->fetch_assoc()): ?>
             <tr>
                 <td><?= htmlspecialchars($r['docente_nome']) ?></td>
+                <td><?= htmlspecialchars($r['curso']) ?></td>
                 <td><?= htmlspecialchars($r['sala']) ?></td>
+                <td><?= htmlspecialchars($r['disciplina']) ?></td>
+                <td><?= htmlspecialchars($r['turno']) ?></td>
                 <td><?= htmlspecialchars($r['dia_semana']) ?></td>
                 <td><?= date('d/m/Y', strtotime($r['data'])) ?></td>
                 <td><?= substr($r['hora_inicio'],0,5) ?> - <?= substr($r['hora_fim'],0,5) ?></td>
                 <td><?= htmlspecialchars($r['finalidade'] ?: '-') ?></td>
+
                 <td class="acoes">
                     <?php if ($r['estado'] === 'pendente'): ?>
-                        <!-- Botões Aprovar/Rejeitar usando POST para gerir_reserva.php -->
+                        <!-- Botões Aprovar/Rejeitar -->
                         <form method="POST" action="gerir_reserva.php" style="display:inline;">
                             <input type="hidden" name="id" value="<?= $r['id'] ?>">
                             <input type="hidden" name="acao" value="aprovar">
@@ -111,10 +132,28 @@ $reservas = $conn->query("
                             <input type="hidden" name="acao" value="rejeitar">
                             <button type="submit">Rejeitar</button>
                         </form>
+
+                    <?php elseif ($r['estado'] === 'aprovada'): ?>
+                        <form method="POST" action="cancelar_reserva.php" style="display:inline;">
+                            <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                            <button type="submit" onclick="return confirm('Cancelar esta reserva?')">
+                                Cancelar Reserva
+                            </button>
+                        </form>
+
+                    <?php elseif ($r['estado'] === 'rejeitada'): ?>
+                        <form method="POST" action="excluir_reserva.php" style="display:inline;">
+                            <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                            <button type="submit" onclick="return confirm('Deseja excluir esta reserva rejeitada?')">
+                                Excluir
+                            </button>
+                        </form>
+
                     <?php else: ?>
                         <?= strtoupper($r['estado']) ?>
                     <?php endif; ?>
                 </td>
+
             </tr>
             <?php endwhile; ?>
 

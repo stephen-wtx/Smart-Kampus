@@ -13,14 +13,17 @@ if (!isset($_SESSION['user'])) {
 
 $user = $_SESSION['user'];
 
-// Verifica se já existe reserva
+// Verifica se já existe reserva ativa
 $check = $conn->prepare("
-    SELECT id FROM reservas
+    SELECT id, estado
+    FROM reservas
     WHERE docente_id = ?
+      AND estado IN ('pendente', 'aprovada')
+    LIMIT 1
 ");
 $check->bind_param("i", $user['id']);
 $check->execute();
-$reservaExistente = $check->get_result()->num_rows > 0;
+$reservaAtiva = $check->get_result()->fetch_assoc();
 ?>
 <!DOCTYPE html>
 <html lang="pt">
@@ -47,7 +50,7 @@ $reservaExistente = $check->get_result()->num_rows > 0;
 <button onclick="abrirModal('modalSolicitar')">Solicitar Reserva</button>
 <button onclick="abrirModal('modalMinhas')">Minhas Reservas</button>
 
-<!-- ================= MODAL SOLICITAR (FULLSCREEN) ================= -->
+<!-- ================= MODAL SOLICITAR ================= -->
 <div id="modalSolicitar" style="
     display:none;
     position:fixed;
@@ -57,18 +60,55 @@ $reservaExistente = $check->get_result()->num_rows > 0;
     background:#fff;
     overflow:auto;
 ">
-
     <h2>Solicitar Reserva</h2>
     <button onclick="fecharModal('modalSolicitar')">Voltar</button>
     <hr>
 
-    <?php if ($reservaExistente): ?>
+    <?php if ($reservaAtiva): ?>
         <p style="color:red;">
-            Erro! Já possui uma reserva (pendente, aprovada ou rejeitada).
+            Já possui uma reserva <strong><?= strtoupper($reservaAtiva['estado']) ?></strong>.<br>
+            Para cancelar, acesse <strong>Minhas Reservas</strong>.
         </p>
     <?php else: ?>
+
         <form method="POST" action="solicitar_reserva.php">
             <table cellpadding="6">
+
+                <tr>
+                    <td>Curso</td>
+                    <td>
+                        <select name="curso" required>
+                            <option value="">-- Selecionar Curso --</option>
+                            <option value="Administração Pública">Administração Pública</option>
+                            <option value="Contabilidade & Auditoria">Contabilidade & Auditoria</option>
+                            <option value="Direito">Direito</option>
+                            <option value="Economia e Gestão">Economia e Gestão</option>
+                            <option value="Gestão de Recursos Humanos">Gestão de Recursos Humanos</option>
+                            <option value="Meio Ambiente">Meio Ambiente</option>
+                            <option value="Tecnologia de Informação">Tecnologia de Informação</option>
+                        </select>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td>Disciplina</td>
+                    <td>
+                        <input type="text" name="disciplina" required>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td>Turno</td>
+                    <td>
+                        <select name="turno" required>
+                            <option value="Manhã">Manhã</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noite">Noite</option>
+                        </select>
+                    </td>
+                </tr>
+
                 <tr>
                     <td>Sala</td>
                     <td>
@@ -80,7 +120,6 @@ $reservaExistente = $check->get_result()->num_rows > 0;
                                 WHERE estado = 'livre'
                                 ORDER BY nome
                             ");
-
                             while ($s = $salas->fetch_assoc()):
                             ?>
                                 <option value="<?= htmlspecialchars($s['nome']) ?>">
@@ -88,7 +127,6 @@ $reservaExistente = $check->get_result()->num_rows > 0;
                                 </option>
                             <?php endwhile; ?>
                         </select>
-
                     </td>
                 </tr>
 
@@ -133,10 +171,11 @@ $reservaExistente = $check->get_result()->num_rows > 0;
                 </tr>
             </table>
         </form>
+
     <?php endif; ?>
 </div>
 
-<!-- ================= MODAL MINHAS RESERVAS (FULLSCREEN) ================= -->
+<!-- ================= MODAL MINHAS RESERVAS ================= -->
 <div id="modalMinhas" style="
     display:none;
     position:fixed;
@@ -146,18 +185,18 @@ $reservaExistente = $check->get_result()->num_rows > 0;
     background:#fff;
     overflow:auto;
 ">
-
     <h2>Minhas Reservas</h2>
     <button onclick="fecharModal('modalMinhas')">Voltar</button>
     <hr>
 
     <?php
     $list = $conn->prepare("
-        SELECT sala, dia_semana, data, hora_inicio, hora_fim, finalidade, estado
+        SELECT id, curso, disciplina, turno, sala, dia_semana, data, hora_inicio, hora_fim, finalidade, estado
         FROM reservas
         WHERE docente_id = ?
         ORDER BY criado_em DESC
     ");
+
     $list->bind_param("i", $user['id']);
     $list->execute();
     $result = $list->get_result();
@@ -168,22 +207,51 @@ $reservaExistente = $check->get_result()->num_rows > 0;
     <?php else: ?>
         <table border="1" cellpadding="6">
             <tr>
+                <th>Curso</th>
+                <th>Disciplina</th>
                 <th>Sala</th>
+                <th>Turno</th>
                 <th>Dia</th>
                 <th>Data</th>
                 <th>Hora</th>
                 <th>Finalidade</th>
                 <th>Estado</th>
+                <th>Ação</th>
             </tr>
+
 
             <?php while ($r = $result->fetch_assoc()): ?>
                 <tr>
+                    <td><?= htmlspecialchars($r['curso']) ?></td>
+                    <td><?= htmlspecialchars($r['disciplina']) ?></td>
                     <td><?= htmlspecialchars($r['sala']) ?></td>
+                    <td><?= htmlspecialchars($r['turno']) ?></td> 
                     <td><?= htmlspecialchars($r['dia_semana']) ?></td>
                     <td><?= date('d/m/Y', strtotime($r['data'])) ?></td>
                     <td><?= substr($r['hora_inicio'],0,5) ?> - <?= substr($r['hora_fim'],0,5) ?></td>
                     <td><?= $r['finalidade'] ?: '-' ?></td>
                     <td><strong><?= strtoupper($r['estado']) ?></strong></td>
+                    <td>
+                        <?php if ($r['estado'] === 'aprovada' || $r['estado'] === 'pendente'): ?>
+                            <form method="POST" action="cancelar_reserva.php" style="display:inline;">
+                                <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                                <button type="submit" onclick="return confirm('Cancelar esta reserva?')">
+                                    Cancelar
+                                </button>
+                            </form>
+
+                        <?php elseif ($r['estado'] === 'rejeitada'): ?>
+                        <form method="POST" action="excluir_reserva.php" style="display:inline;">
+                            <input type="hidden" name="id" value="<?= $r['id'] ?>">
+                            <button type="submit" onclick="return confirm('Deseja excluir esta reserva rejeitada?')">
+                                Excluir
+                            </button>
+                        </form>
+
+                        <?php else: ?>
+                            -
+                        <?php endif; ?>
+                    </td>
                 </tr>
             <?php endwhile; ?>
         </table>
