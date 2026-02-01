@@ -1,8 +1,45 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
 
-$tipo = $_GET['tipo'] ?? 'aula';
+/* =========================
+   RECEBER PARÂMETROS
+   ========================= */
+$tipo     = $_GET['tipo'] ?? 'aula';
+$curso    = $_GET['curso'] ?? '';
+$ano      = $_GET['ano'] ?? '';
+$semestre = $_GET['semestre'] ?? '';
+$turno    = $_GET['turno'] ?? '';
 
+/* =========================
+   MONTAR FILTROS DINÂMICOS
+   ========================= */
+$filtros = [];
+
+if (!empty($curso)) {
+    $curso = $conn->real_escape_string($curso);
+    $filtros[] = "curso = '$curso'";
+}
+
+if (!empty($ano)) {
+    $ano = (int)$ano;
+    $filtros[] = "ano = $ano";
+}
+
+if (!empty($semestre)) {
+    $semestre = $conn->real_escape_string($semestre);
+    $filtros[] = "semestre = '$semestre'";
+}
+
+if (!empty($turno)) {
+    $turno = $conn->real_escape_string($turno);
+    $filtros[] = "turno = '$turno'";
+}
+
+$where = $filtros ? 'WHERE ' . implode(' AND ', $filtros) : '';
+
+/* =========================
+   TESTES E EXAMES
+   ========================= */
 if ($tipo === 'teste' || $tipo === 'exame') {
 
     $tabela = $tipo === 'teste' ? 'testes' : 'exames';
@@ -20,17 +57,19 @@ if ($tipo === 'teste' || $tipo === 'exame') {
             hora_inicio,
             hora_fim
         FROM $tabela
+        $where
         ORDER BY data, hora_inicio
     ";
 
     $result = $conn->query($sql);
 
-    if ($result->num_rows === 0) {
-        echo "<p><strong>Sem horários disponíveis.</strong></p>";
+    if (!$result || $result->num_rows === 0) {
+        echo "<p><strong>Sem horário disponível ainda.</strong></p>";
         exit;
     }
     ?>
 
+    
     <table>
         <thead>
             <tr>
@@ -73,24 +112,53 @@ if ($tipo === 'teste' || $tipo === 'exame') {
         </tbody>
     </table>
 
+        <?php
+    $queryString = http_build_query([
+        'tipo'     => $tipo,
+        'curso'    => $curso ?? '',
+        'ano'      => $ano ?? '',
+        'semestre' => $semestre ?? '',
+        'turno'    => $turno ?? ''
+    ]);
+    ?>
+
+    <div style="margin-top:20px; text-align:right;">
+        <a href="baixar_horario_pdf.php?<?= $queryString ?>" target="_blank">
+            <button>📄 Baixar Horário</button>
+        </a>
+    </div>
+
+
 <?php
+
     exit;
 }
 
 /* =========================
-   AULAS (mantém como está)
+   AULAS (CÓDIGO ORIGINAL + FILTROS)
    ========================= */
 
 $sql = "
-    SELECT dia_semana, curso, ano, semestre, disciplina, turno, sala, hora_inicio, hora_fim
+    SELECT 
+        dia_semana,
+        curso,
+        ano,
+        semestre,
+        disciplina,
+        turno,
+        sala,
+        hora_inicio,
+        hora_fim
     FROM horarios
-    ORDER BY FIELD(dia_semana,'Segunda','Terça','Quarta','Quinta','Sexta','Sábado'), hora_inicio
+    $where
+    ORDER BY FIELD(dia_semana,'Segunda','Terça','Quarta','Quinta','Sexta','Sábado'),
+             hora_inicio
 ";
 
 $result = $conn->query($sql);
 
-if ($result->num_rows === 0) {
-    echo "<p><strong>Sem horários disponíveis.</strong></p>";
+if (!$result || $result->num_rows === 0) {
+    echo "<p><strong>Sem horário disponível ainda.</strong></p>";
     exit;
 }
 ?>
@@ -118,8 +186,26 @@ if ($result->num_rows === 0) {
                 <td><?= htmlspecialchars($row['disciplina']) ?></td>
                 <td><?= htmlspecialchars($row['turno']) ?></td>
                 <td><?= htmlspecialchars($row['sala']) ?></td>
-                <td><?= substr($row['hora_inicio'],0,5) ?> - <?= substr($row['hora_fim'],0,5) ?></td>
+                <td><?= substr($row['hora_inicio'], 0, 5) ?> - <?= substr($row['hora_fim'], 0, 5) ?></td>
             </tr>
         <?php endwhile; ?>
     </tbody>
 </table>
+
+<?php
+$queryString = http_build_query([
+    'tipo'     => $tipo,
+    'curso'    => $curso ?? '',
+    'ano'      => $ano ?? '',
+    'semestre' => $semestre ?? '',
+    'turno'    => $turno ?? ''
+]);
+?>
+
+<div style="margin-top:20px; text-align:right;">
+    <a href="baixar_horario_pdf.php?<?= $queryString ?>" target="_blank">
+        <button>📄 Baixar Horário</button>
+    </a>
+</div>
+
+
