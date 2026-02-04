@@ -2,185 +2,110 @@
 session_start();
 require_once __DIR__ . '/../config/google.php';
 
-// Se já estiver autenticado
 if (isset($_SESSION['user'])) {
-    header('Location: dashboard.php');
+    header('Location: /smartkampus/dashboard/dashboard.php');
     exit;
 }
 
 $loginUrl = $client->createAuthUrl();
 ?>
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
-    <title>SmartKampus | Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART KAMPUS | Login</title>
 
-    <!-- Google Fonts - Inter -->
+    <link rel="stylesheet" href="/smartkampus/public/assets/css/app.css">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <style>
-        :root {
-            --text-dark: #1f2937;
-            --text-light: #6b7280;
-            --border: #e5e7eb;
-            --radius: 16px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-
-        body {
-            min-height: 100vh;
-            background:
-                linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
-                url("assets/bg.jpeg") no-repeat center center / cover;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        /* Container principal */
-        .login-container {
-            width: 100%;
-            max-width: 900px;
-            background: #ffffff;
-            border-radius: var(--radius);
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            overflow: hidden;
-            box-shadow: 0 30px 70px rgba(0,0,0,0.35);
-        }
-
-        /* Sidebar */
-        .login-brand {
-            padding: 48px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            border-right: 1px solid var(--border);
-        }
-
-        .login-brand img {
-            width: 290px;
-            margin-bottom: 10px;
-        }
-
-        .login-brand h1 {
-            font-size: 28px;
-            color: var(--text-dark);
-            margin-bottom: 8px;
-            font-weight: 600;
-        }
-
-        .login-brand p {
-            font-size: 15px;
-            color: var(--text-light);
-            max-width: 320px;
-        }
-
-        /* Área de login */
-        .login-form {
-            padding: 56px 48px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .login-form h2 {
-            font-size: 24px;
-            color: var(--text-dark);
-            margin-bottom: 8px;
-        }
-
-        .login-form p {
-            font-size: 14px;
-            color: var(--text-light);
-            margin-bottom: 32px;
-            text-align: center;
-            max-width: 320px;
-        }
-
-        /* Botão Google */
-        .google-btn {
-            width: 100%;
-            max-width: 340px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 14px 16px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            background: #ffffff;
-            color: #111827;
-            font-size: 15px;
-            font-weight: 500;
-            text-decoration: none;
-            transition: all 0.2s ease;
-        }
-
-        .google-btn img {
-            width: 20px;
-            height: 20px;
-        }
-
-        .google-btn:hover {
-            background: #f9fafb;
-            transform: translateY(-1px);
-        }
-
-        /* Mobile */
-        @media (max-width: 768px) {
-            .login-container {
-                grid-template-columns: 1fr;
-            }
-
-            .login-brand {
-                border-right: none;
-                padding: 10px 14px 12px;
-            }
-
-            .login-form {
-                padding: 24px;
-            }
-        }
-    </style>
+    <link rel="icon" type="image/x-icon" href="/smartkampus/public/assets/imgs/smartkampus-logo.png">
 </head>
-<body>
 
-<main class="login-container">
+<body class="min-h-screen font-body bg-gray-50">
 
-    <!-- Sidebar / Branding -->
-    <section class="login-brand">
-        <img src="assets/smartkampus-logo.png" alt="Logo SmartKampus">
-        <h1>Smart Kampus</h1>
-        <p>Sistema de Gestão de Salas e Horários</p>
-    </section>
 
-    <!-- Login -->
-    <section class="login-form">
-        <h2>Bem-vindo</h2>
-        <p>Utilize o seu e-mail institucional para aceder ao sistema.</p>
+    <!-- Background para TODAS as telas -->
+    <div class="fixed inset-0 -z-10 bg-[url('/smartkampus/public/assets/imgs/bg.jpeg')] bg-cover bg-center bg-no-repeat"></div>
+    <div class="fixed inset-0 -z-10 bg-black/30 md:bg-black/40 backdrop-blur-sm"></div>
 
-        <a class="google-btn" href="<?= htmlspecialchars($loginUrl); ?>">
-            <img src="https://developers.google.com/identity/images/g-logo.png" alt="">
-            Entrar com Google
-        </a>
-    </section>
 
-</main>
+    <!-- Login Container -->
+    <div class="min-h-screen flex items-center justify-center p-4">
+        <div class="animate-fade-in grid grid-cols-1 md:grid-cols-2 w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+
+            <!-- Brand (sempre visível) -->
+            <div class="flex flex-col items-center mt-10 justify-center p-8 md:p-10 text-center md:border-r border-gray-200">
+                <img
+                src="/smartkampus/public/assets/imgs/smartkampus-logo.png"
+                alt="SMART KAMPUS"
+                class="w-44 sm:w-52 md:w-80 mb-6"
+                >
+
+
+                <h1 class="font-heading text-4xl md:text-5xl tracking-wide text-primary mb-3">
+                    SMART KAMPUS
+                </h1>
+
+                <p class="text-darktext text-sm md:text-base max-w-xs">
+                    Sistema de gestão de salas e horários
+                </p>
+
+                <!-- Botão (mobile fica logo abaixo do slogan) -->
+                <div class="w-full flex justify-center mt-8 md:hidden">
+                    <a href="<?= htmlspecialchars($loginUrl); ?>"
+                       class="btn btn-google transition-transform duration-300 hover:-translate-y-1"
+                       aria-label="Entrar com email institucional da UCM">
+                        <span class="font-semibold text-sm">
+                            Entrar com email da UCM
+                        </span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Login (APENAS md+) -->
+            <div class="hidden md:flex mt-16 flex-col items-center justify-center p-10 text-center">
+                <div class="mt-14">
+                    <h2 class="text-3xl font-semibold text-gray-800 mb-3">
+                        Boas-vindas!
+                    </h2>
+
+                    <p class="text-sm text-gray-600">
+                        Use o seu email institucional para aceder ao sistema
+                    </p>
+                </div>
+
+            <!-- Google Login Button -->
+            <div class="mt-20 md:mt-24">
+                <a href="<?= htmlspecialchars($loginUrl); ?>" 
+                class="btn btn-google transition-transform duration-300 hover:-translate-y-1"
+                aria-label="Entrar com email institucional da UCM">
+                    <span class="font-semibold text-sm md:text-base">
+                        Entrar com email da UCM
+                    </span>
+                </a>
+            </div>
+
+
+                <p class="text-xs text-gray-500 mt-4">
+                    Apenas para comunidade académica da UCM.
+                </p>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-4 left-0 right-0 text-center">
+        <p class="text-xs font-medium text-white/90">
+            © <?= date('Y'); ?> SMART KAMPUS • Universidade Católica de Moçambique
+        </p>
+    </footer>
+
+
 
 </body>
 </html>
