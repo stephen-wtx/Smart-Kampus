@@ -45,7 +45,6 @@ Responsável pela gestão global da plataforma.
   - Rejeitar
   - Cancelar
   - Apagar
-- Gerir salas disponíveis
 - Efetuar upload do calendário académico
 - Monitorizar o estado das salas em tempo real
 
