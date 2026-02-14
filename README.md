@@ -89,6 +89,20 @@ Possuem acesso de visualização.
 
 ---
 
+## 📸 Screenshots
+
+### 🔐 Login
+![Login](screenshots/login.png)
+
+### 📊 Painel Principal
+![Dashboard](screenshots/dashboard.png)
+
+### 📊 Painel Administrativo
+![Admin](screenshots/admin.png)
+
+### 📊 Painel Docente
+![Docente](screenshots/docente.png)
+
 ## 🛠 Tecnologias Utilizadas
 
 - PHP
